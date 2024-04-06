@@ -34,11 +34,22 @@ class ProductsService
 
     public function createProduct(array $data, $import = false)
     {
+//        dd($import);
         $callBack = function () use ($data, $import) {
             if ($import) {
                 $data = $this->mountData($data);
-                return $this->model::createMany($data);
+                $output = $this->model::insert($data);
+                if ($output) {
+                    return $data;
+                }
             }
+
+            $data['code'] = random_int(1000, 9999);
+            $data['created_t'] = now()->toDateTimeString();
+            $data['created_t'] = strtotime($data['created_t']);
+            $data['last_modified_t'] = now()->toDateTimeString();
+            $data['last_modified_t'] = strtotime($data['last_modified_t']);
+
             return $this->model::create($data);
         };
 
@@ -46,23 +57,26 @@ class ProductsService
 
     }
 
-    public function updateProduct(int $id, array $data, $import = false)
+    public function updateProduct(int $code, array $data, $import = false)
     {
-        $callBack = function () use ($data, $import, $id) {
+        $callBack = function () use ($data, $import, $code) {
             if ($import) {
                 $data = $this->mountData($data);
             }
-            $this->model::where('id', $id)->update($data);
+            return $this->model::where('code', $code)->firstOrFail()->update($data);
         };
 
-        return DB::transaction($callBack);
+        $response = DB::transaction($callBack);
+        if($response) {
+            return $data;
+        }
     }
 
 
-    public function deleteProduct(int $id)
+    public function deleteProduct(int $code)
     {
-        return DB::transaction(function () use ($id) {
-            return $this->model::where('id', $id)->firstOrFail()->delete();
+        return DB::transaction(function () use ($code) {
+            return $this->model::where('code', $code)->firstOrFail()->delete();
         });
     }
 

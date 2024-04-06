@@ -9,11 +9,13 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Collection;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Validator;
 
 class Controller extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
+
     /**
      * @param $data
      * @param $request
@@ -51,12 +53,15 @@ class Controller extends BaseController
 
     /**
      * @param $exception
-     * @param $status
+     * @param $code
      * @return \Illuminate\Http\JsonResponse
-     * @author João Pedro B Santos
      */
     public function setError($exception, $code = 400)
     {
+        if (!in_array($code, Response::$statusTexts)) {
+            $code = Response::HTTP_BAD_REQUEST;
+        }
+
         if ($exception instanceof \Throwable) {
             return response()->json([
                 'message' => $exception->getMessage(),
@@ -64,11 +69,11 @@ class Controller extends BaseController
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
                 'trace' => $exception->getTrace(),
-            ], $code ?: 400);
+            ], $code ?: Response::HTTP_BAD_REQUEST);
         }
         return response()->json([
             'message' => $exception,
-        ], $code ?: 400);
+        ], $code ?: Response::HTTP_BAD_REQUEST);
     }
 
     /**

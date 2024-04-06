@@ -8,7 +8,29 @@ use Illuminate\Support\Facades\DB;
 
 class ProductsController extends Controller
 {
-    protected $rules = [];
+    protected $rules = [
+        'file' => ['file', 'mimetypes:application/json'],
+        'code' => ['integer'],
+        'status' => ['string', 'in:draft,trash,published'],
+        'url' => ['string'],
+        'creator' => ['string'],
+        'product_name' => ['string'],
+        'quantity' => ['string'],
+        'brands' => ['string'],
+        'categories' => ['string'],
+        'labels' => ['string'],
+        'cities' => ['string'],
+        'purchase_places' => ['string'],
+        'stores' => ['string'],
+        'ingredients_text' => ['string'],
+        'traces' => ['string'],
+        'serving_size' => ['string'],
+        'serving_quantity' => ['numeric'],
+        'nutriscore_score' => ['integer'],
+        'nutriscore_grade' => ['string', 'max:1'],
+        'main_category' => ['string'],
+        'image_url' => ['string'],
+    ];
     protected $productsService;
 
     public function __construct(ProductsService $productsService)
@@ -38,10 +60,11 @@ class ProductsController extends Controller
     {
         try {
             $validated = $this->validated();
-            $response = DB::transaction(function () use ($validated) {
-                return $this->productsService->createProduct($validated);
-            });
-
+            if (isset($validated['file'])) {
+                $file = file_get_contents($validated['file']);
+                $validated = json_decode($file, true);
+            }
+            $response = $this->productsService->createProduct($validated, isset($file));
             return $this->setResponse($response, 201);
 
         } catch (\Exception $e) {
@@ -67,14 +90,16 @@ class ProductsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, int $id)
     {
         try {
             $validated = $this->validated();
-            $response = DB::transaction(function () use ($validated) {
-                return $this->productsService->updateProduct($id, $validated);
-            });
-
+            if (isset($validated['file'])) {
+                $file = file_get_contents($validated['file']);
+                $validated = json_decode($file, true);
+            }
+            $response = $this->productsService->updateProduct($id, $validated, isset($file));
+            
             return $this->setResponse($response);
 
         } catch (\Exception $e) {
@@ -90,7 +115,7 @@ class ProductsController extends Controller
         try {
             $response = $this->productsService->deleteProduct($id);
 
-            return $this->setResponse($response);
+            return $this->setResponse($response, 204);
 
         } catch (\Exception $e) {
             return $this->setError($e, $e->getCode());

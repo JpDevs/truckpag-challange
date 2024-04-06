@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->string('code')->unique();
             $table->enum('status', ['draft', 'trash', 'published'])->default('published');
-            $table->timestamp('imported_t');
+            $table->timestamp('imported_t')->nullable();
             $table->string('url');
             $table->string('creator');
             $table->integer('created_t');
@@ -24,7 +24,7 @@ return new class extends Migration {
             $table->string('brands');
             $table->string('categories');
             $table->string('labels');
-            $table->string('cities');
+            $table->string('cities')->nullable();
             $table->string('purchase_places');
             $table->string('stores');
             $table->string('ingredients_text');
