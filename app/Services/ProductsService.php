@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\ImportLogs;
 use App\Models\Products;
 use App\Repositories\ProductsRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
 
 class ProductsService
@@ -21,7 +23,7 @@ class ProductsService
     /**
      * @return LengthAwarePaginator
      */
-    public function getAllProducts(): LengthAwarePaginator
+    public function getAllProducts(): Paginator
     {
         $perPage = request()->query('perPage') ?? 10;
         return $this->model::isActive()->simplePaginate($perPage);
@@ -38,6 +40,7 @@ class ProductsService
             if ($import) {
                 $data = $this->mountData($data, $many);
                 $output = $this->model::insert($data);
+                ImportLogs::create(['code' => $data['code']]);
                 if ($output) {
                     return $data;
                 }
