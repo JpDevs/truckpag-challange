@@ -99,7 +99,7 @@ class ProductsController extends Controller
                 $validated = json_decode($file, true);
             }
             $response = $this->productsService->updateProduct($id, $validated, isset($file));
-            
+
             return $this->setResponse($response);
 
         } catch (\Exception $e) {

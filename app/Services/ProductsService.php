@@ -24,7 +24,7 @@ class ProductsService
     public function getAllProducts(): LengthAwarePaginator
     {
         $perPage = request()->query('perPage') ?? 10;
-        return $this->model::isActive()->paginate($perPage);
+        return $this->model::isActive()->simplePaginate($perPage);
     }
 
     public function getProduct($code)
@@ -32,12 +32,11 @@ class ProductsService
         return $this->model::isActive()->where('code', $code)->firstOrFail();
     }
 
-    public function createProduct(array $data, $import = false)
+    public function createProduct(array $data, bool $import = false, bool $many = false)
     {
-//        dd($import);
-        $callBack = function () use ($data, $import) {
+        $callBack = function () use ($data, $import, $many) {
             if ($import) {
-                $data = $this->mountData($data);
+                $data = $this->mountData($data, $many);
                 $output = $this->model::insert($data);
                 if ($output) {
                     return $data;
@@ -67,7 +66,7 @@ class ProductsService
         };
 
         $response = DB::transaction($callBack);
-        if($response) {
+        if ($response) {
             return $data;
         }
     }
@@ -80,34 +79,36 @@ class ProductsService
         });
     }
 
-    public function mountData(array $data)
+    public function mountData(array $data, $many = false)
     {
-        $output = [];
+        if ($many) {
+            $data = $data[0];
+        }
         foreach ($data as $row) {
             $output[] = [
-                'code' => sanitizeInt($row['code']) ?? null,
+                'code' => sanitizeInt($row['code'] ?? random_int(1000, 9999)),
                 'status' => $row['status'] ?? 'draft',
                 'imported_t' => now(),
-                'url' => $row['url'] ?? null,
-                'creator' => $row['creator'] ?? null,
-                'created_t' => $row['created_t'] ?? null,
-                'last_modified_t' => $row['last_modified_t'] ?? null,
-                'product_name' => $row['product_name'],
-                'quantity' => $row['quantity'],
-                'brands' => $row['brands'],
-                'categories' => $row['categories'],
-                'labels' => $row['labels'],
-                'cities' => $row['cities'],
-                'purchase_places' => $row['purchase_places'],
-                'stores' => $row['stores'],
-                'ingredients_text' => $row['ingredients_text'],
-                'traces' => $row['traces'],
-                'serving_size' => $row['serving_size'],
-                'serving_quantity' => $row['serving_quantity'],
-                'nutriscore_score' => $row['nutriscore_score'],
-                'nutriscore_grade' => $row['nutriscore_grade'],
-                'main_category' => $row['main_category'],
-                'image_url' => $row['image_url'] ?? null,
+                'url' => $row['url'] ?: null,
+                'creator' => $row['creator'] ?: null,
+                'created_t' => $row['created_t'] ?: null,
+                'last_modified_t' => $row['last_modified_t'] ?: null,
+                'product_name' => $row['product_name'] ?: null,
+                'quantity' => $row['quantity'] ?? 0,
+                'brands' => $row['brands'] ?: null,
+                'categories' => $row['categories'] ?: null,
+                'labels' => $row['labels'] ?: null,
+                'cities' => $row['cities'] ?: null,
+                'purchase_places' => $row['purchase_places'] ?: null,
+                'stores' => $row['stores'] ?: null,
+                'ingredients_text' => $row['ingredients_text'] ?: null,
+                'traces' => $row['traces'] ?: null,
+                'serving_size' => $row['serving_size'] ?? null ,
+                'serving_quantity' => $row['serving_quantity'] ?: null,
+                'nutriscore_score' => $row['nutriscore_score'] ?: null,
+                'nutriscore_grade' => $row['nutriscore_grade'] ?: null,
+                'main_category' => $row['main_category'] ?: null,
+                'image_url' => $row['image_url'] ?: null,
             ];
         }
         return $output;
