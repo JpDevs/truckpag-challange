@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Constants\ProductsConstants;
 use App\Models\Products;
+use App\Models\ImportLogs;
 use App\Services\ImportService;
 use App\Services\ProductsService;
 use Illuminate\Console\Command;
@@ -42,14 +43,15 @@ class UpdateProducts extends Command
     public function handle($attempts = 0)
     {
         $this->model::truncate();
+        ImportLogs::truncate();
         $paths = ProductsConstants::PATCHS;
         $data = [];
-        if ($attempts >= 10) {
+        if ($attempts >= 15) {
             return false;
         }
         try {
             foreach ($paths as $path) {
-                $endpoint = env('API_URL') . $path;
+                $endpoint = env('API_URL','https://challenges.coode.sh/food/data/json/') . $path;
                 $data[] = $this->importService->getProducts($endpoint);
             }
             $output = $this->productsService->createProduct($data, true, true);

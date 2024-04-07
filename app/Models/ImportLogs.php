@@ -11,5 +11,5 @@ class ImportLogs extends Model
 
     public $timestamps = true;
     protected $table = 'import_logs';
-    protected $guarded = [];
+    protected $fillable = ['code','updated_at','created_at'];
 }

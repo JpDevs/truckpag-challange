@@ -21,7 +21,7 @@ class ProductsService
     }
 
     /**
-     * @return LengthAwarePaginator
+     * @return Paginator
      */
     public function getAllProducts(): Paginator
     {
@@ -40,10 +40,13 @@ class ProductsService
             if ($import) {
                 $data = $this->mountData($data, $many);
                 $output = $this->model::insert($data);
-                ImportLogs::create(['code' => $data['code']]);
-                if ($output) {
-                    return $data;
+                $codes = [];
+                $collectData = collect($data)->pluck('code');
+
+                foreach ($collectData as $code) {
+                    $codes[]['code'] = $code;
                 }
+                ImportLogs::insert($codes);
             }
 
             $data['code'] = random_int(1000, 9999);
@@ -106,7 +109,7 @@ class ProductsService
                 'stores' => $row['stores'] ?: null,
                 'ingredients_text' => $row['ingredients_text'] ?: null,
                 'traces' => $row['traces'] ?: null,
-                'serving_size' => $row['serving_size'] ?? null ,
+                'serving_size' => $row['serving_size'] ?? null,
                 'serving_quantity' => $row['serving_quantity'] ?: null,
                 'nutriscore_score' => $row['nutriscore_score'] ?: null,
                 'nutriscore_grade' => $row['nutriscore_grade'] ?: null,
