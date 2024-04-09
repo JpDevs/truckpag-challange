@@ -25,13 +25,12 @@ class ProductsService
      */
     public function getAllProducts(): Paginator
     {
-        $perPage = request()->query('perPage') ?? 10;
-        return $this->model::isActive()->simplePaginate($perPage);
+        return $this->productsRepository->getAll();
     }
 
     public function getProduct($code)
     {
-        return $this->model::isActive()->where('code', $code)->firstOrFail();
+        return $this->productsRepository->find($code);
     }
 
     public function createProduct(array $data, bool $import = false, bool $many = false)
@@ -81,7 +80,7 @@ class ProductsService
     public function deleteProduct(int $code)
     {
         return DB::transaction(function () use ($code) {
-            return $this->model::where('code', $code)->firstOrFail()->delete();
+            return $this->model::where('code', $code)->firstOrFail()->update(['status' => 'trash']);
         });
     }
 
